@@ -26,7 +26,7 @@ app.use(morgan('combined'));
 
 
 // retrieve all questions
-app.get('/'. (req, res) => {
+app.get('/', (req, res) => {
   const qs = questions.map(q => ({
 	id: q.id,
 	title: q.title,
@@ -42,7 +42,7 @@ app.get('/:id', (req, res) => {
   if (question.length > 1) return res.status(500).send();
   if (question.length === 0) return res.status(404).send();
   res.send(question[0]);
-}
+});
 
 // insert a new question
 app.post('/', (req, res) => {
@@ -75,9 +75,5 @@ app.post('/answer/:id', (req, res) => {
 app.listen(8081, () => {
   console.log('listening on port 8081');
 });
-
-
-
-
 
 
