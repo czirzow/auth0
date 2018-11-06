@@ -6,6 +6,10 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 
+// ... other require statements ...
+const jwt = require('express-jwt');
+const jwksRsa = require('jwks-rsa');
+
 // define the Express app
 const app = express();
 
@@ -44,21 +48,37 @@ app.get('/:id', (req, res) => {
   res.send(question[0]);
 });
 
+
+const checkJwt = jwt({
+  secret: jwksRsa.expressJwtSecret({
+	cache: true,
+	rateLimit: true,
+	jwksRequestsPerMinute: 5,
+	jwksUri: `https://zirzow.auth0.com/.well-known/jwks.json`
+  }),
+
+  // Validate the audience and the issuer.
+  audience: '56goMA3OhHLvYMpJWWZA7iXmZ8Sq8K4x',
+  issuer: `https://zirzow.auth0.com/`,
+  algorithms: ['RS256']
+});
+
 // insert a new question
-app.post('/', (req, res) => {
+app.post('/', checkJwt, (req, res) => {
   const {title, description} = req.body;
   const newQuestion = {
 	id: questions.length + 1,
 	title,
 	description,
 	answers: [],
+	author: req.user.name,
   };
   questions.push(newQuestion);
   res.status(200).send();
 });
 
 
-app.post('/answer/:id', (req, res) => {
+app.post('/answer/:id', checkJwt, (req, res) => {
   const {answer} = req.body;
 
   const question = questions.filter(q => (q.id === parseInt(req.params.id)));
@@ -67,6 +87,7 @@ app.post('/answer/:id', (req, res) => {
 
   question[0].answers.push({
 	answer,
+	author: req.user.name,
   });
 
   res.status(200).send();
